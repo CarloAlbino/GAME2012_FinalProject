@@ -10,19 +10,20 @@
 
 using namespace std;
 
+// For Right Paddle
 GLuint VBO;
 GLuint IBO;
-
+// For Left Paddle
 GLuint VBO2;
 GLuint IBO2;
-
+// For Ball
 GLuint VBO3;
 GLuint IBO3;
 
 //Memory position of World Matrix on the GPU
-GLuint gWorldLocation;
-GLuint gWorldLocation2;
-GLuint gWorldLocationBall;
+GLuint gWorldLocation_RightPaddle;
+GLuint gWorldLocation_LeftPaddle;
+GLuint gWorldLocation_Ball;
 
 const char* pVSFileName = "shader.vs";
 const char* pFSFileName = "shader.fs";
@@ -58,57 +59,47 @@ static void RenderSceneCB()
 	//Static scale variable
 	static float Scale = 0.0f;
 
-	//Scale += 0.1f;
-
 	static float Rotation = 0.0f;
-
-	//Rotation += 0.008f;
 
 	Transform transform;
 	transform.Position(0.0f, 0.0f, 5.0f);
 	transform.Rotation(0.0f, 0.0f, 0.0f);
 	transform.SetPerspective(50.f, 1024, 768, 1.0f, 1000.0f);
 
-	// sinf(Scale * 300000.f)
-
 	//Right Paddle
 	//Update world matrix value on GPU
-	glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, (const GLfloat*)transform.GetWorldPerspectiveTransformation());
+	glUniformMatrix4fv(gWorldLocation_RightPaddle, 1, GL_TRUE, (const GLfloat*)transform.GetWorldPerspectiveTransformation());
 
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	//Bind the Index buffer to the pipeline
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-	//Draw the indices
+	//Draw the indices for the right paddle
 	glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_INT, 0);
-
-	//////////
 
 	// Left Paddle
 	//Update world matrix value on GPU
-	glUniformMatrix4fv(gWorldLocation2, 1, GL_TRUE, (const GLfloat*)transform.GetWorldPerspectiveTransformation());
+	glUniformMatrix4fv(gWorldLocation_LeftPaddle, 1, GL_TRUE, (const GLfloat*)transform.GetWorldPerspectiveTransformation());
 
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO2);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	//Bind the Index buffer to the pipeline
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO2);
-	//Draw the indices
+	//Draw the indices for the left paddle
 	glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_INT, 0);
 
-	//////////
 	// Ball
-
 	//Update world matrix value on GPU
-	glUniformMatrix4fv(gWorldLocationBall, 1, GL_TRUE, (const GLfloat*)transform.GetWorldPerspectiveTransformation());
+	glUniformMatrix4fv(gWorldLocation_Ball, 1, GL_TRUE, (const GLfloat*)transform.GetWorldPerspectiveTransformation());
 
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO3);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	//Bind the Index buffer to the pipeline
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO3);
-	//Draw the indices
+	//Draw the indices for the ball
 	glDrawElements(GL_TRIANGLE_FAN, 18, GL_UNSIGNED_INT, 0);
 
 	glDisableVertexAttribArray(0);
@@ -209,7 +200,7 @@ static void CompileShaders()
 	glUseProgram(ShaderProgram);
 
 	//Allocate and get memory location of World Matrix on GPU
-	gWorldLocation = glGetUniformLocation(ShaderProgram, "gWorld");
+	gWorldLocation_RightPaddle = glGetUniformLocation(ShaderProgram, "gWorld");
 }
 
 static void InitializeGlutCallbacks()
@@ -220,76 +211,60 @@ static void InitializeGlutCallbacks()
 
 static void CreateVertexBuffer()
 {
-	/*Vector3f Vertices[4];
-	Vertices[0] = Vector3f(-1.0f, -1.0f, 0.0f);
-	Vertices[1] = Vector3f(-1.0f, 1.0f, 0.0f);
-	Vertices[2] = Vector3f(1.0f, 1.0f, 0.0f);
-	Vertices[3] = Vector3f(-1.0f, 1.0f, 0.0f);*/
-
-	Vector3f Vertices[4];
-	Vertices[0] = Vector3f(1.9f, 1.9f, 0.0f);
-	Vertices[1] = Vector3f(1.9f, 1.25f, 0.0f);
-	Vertices[2] = Vector3f(1.8f, 1.9f, 0.0f);
-	Vertices[3] = Vector3f(1.8f, 1.25f, 0.0f);
+	// Right Paddle
+	Vector3f RightPaddle_Verts[4];
+	RightPaddle_Verts[0] = Vector3f(1.9f, 1.9f, 0.0f);	// Top right
+	RightPaddle_Verts[1] = Vector3f(1.9f, 1.25f, 0.0f);	// Bottom right
+	RightPaddle_Verts[2] = Vector3f(1.8f, 1.9f, 0.0f);	// Top left
+	RightPaddle_Verts[3] = Vector3f(1.8f, 1.25f, 0.0f);	// Bottom left
 
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(RightPaddle_Verts), RightPaddle_Verts, GL_STATIC_DRAW);
 
-	//////
-
-	Vector3f Vertices2[4];
-	Vertices2[0] = Vector3f(-1.9f, -1.9f, 0.0f);
-	Vertices2[1] = Vector3f(-1.9f, -1.25f, 0.0f);
-	Vertices2[2] = Vector3f(-1.8f, -1.9f, 0.0f);
-	Vertices2[3] = Vector3f(-1.8f, -1.25f, 0.0f);
+	// Left Paddle
+	Vector3f LeftPaddle_Verts[4];
+	LeftPaddle_Verts[0] = Vector3f(-1.9f, -1.9f, 0.0f);	// Bottom left
+	LeftPaddle_Verts[1] = Vector3f(-1.9f, -1.25f, 0.0f);// Top left
+	LeftPaddle_Verts[2] = Vector3f(-1.8f, -1.9f, 0.0f);	// Bottom right
+	LeftPaddle_Verts[3] = Vector3f(-1.8f, -1.25f, 0.0f);// Top right
 
 	glGenBuffers(1, &VBO2);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices2), Vertices2, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(LeftPaddle_Verts), LeftPaddle_Verts, GL_STATIC_DRAW);
 
-	////////
-
-	Vector3f Vertices3[17];
-	Vertices3[0] = Vector3f(0.2f, 0.2f, 0.0f);	 // Center
-	Vertices3[1] = Vector3f(0.2f, 0.29f, 0.0f);	 // Top
-	Vertices3[2] = Vector3f(0.23f, 0.28f, 0.0f);	 
-	Vertices3[3] = Vector3f(0.28f, 0.23f, 0.0f);
-	Vertices3[4] = Vector3f(0.29f, 0.2f, 0.0f);	 // Right
-	Vertices3[5] = Vector3f(0.27f, 0.15f, 0.0f);
-	Vertices3[6] = Vector3f(0.24f, 0.11f, 0.0f);
-	Vertices3[7] = Vector3f(0.2f, 0.11f, 0.0f);	 // Down
-	Vertices3[8] = Vector3f(0.18f, 0.11f, 0.0f);
-	Vertices3[9] = Vector3f(0.11f, 0.18f, 0.0f);
-	Vertices3[10] = Vector3f(0.11f, 0.2f, 0.0f);	 // Left
-	Vertices3[11] = Vector3f(0.11f, 0.21f, 0.0f);
-	Vertices3[12] = Vector3f(0.18f, 0.29f, 0.0f);
-	// Extra verts
-	Vertices3[13] = Vector3f(0.26f, 0.26f, 0.0f);
-	Vertices3[14] = Vector3f(0.26f, 0.13f, 0.0f);	 
-	Vertices3[15] = Vector3f(0.13f, 0.13f, 0.0f);
-	Vertices3[16] = Vector3f(0.13f, 0.26f, 0.0f);
+	// Ball
+	Vector3f Ball_Verts[17];
+	Ball_Verts[0] = Vector3f(0.2f, 0.2f, 0.0f);		// Center
+	Ball_Verts[1] = Vector3f(0.2f, 0.29f, 0.0f);	// Top
+	Ball_Verts[2] = Vector3f(0.23f, 0.28f, 0.0f);	 
+	Ball_Verts[3] = Vector3f(0.28f, 0.23f, 0.0f);
+	Ball_Verts[4] = Vector3f(0.29f, 0.2f, 0.0f);	// Right
+	Ball_Verts[5] = Vector3f(0.27f, 0.15f, 0.0f);
+	Ball_Verts[6] = Vector3f(0.24f, 0.11f, 0.0f);
+	Ball_Verts[7] = Vector3f(0.2f, 0.11f, 0.0f);	// Bottom
+	Ball_Verts[8] = Vector3f(0.18f, 0.11f, 0.0f);
+	Ball_Verts[9] = Vector3f(0.11f, 0.18f, 0.0f);
+	Ball_Verts[10] = Vector3f(0.11f, 0.2f, 0.0f);	// Left
+	Ball_Verts[11] = Vector3f(0.11f, 0.21f, 0.0f);
+	Ball_Verts[12] = Vector3f(0.18f, 0.29f, 0.0f);
+	Ball_Verts[13] = Vector3f(0.26f, 0.26f, 0.0f);
+	Ball_Verts[14] = Vector3f(0.26f, 0.13f, 0.0f);	 
+	Ball_Verts[15] = Vector3f(0.13f, 0.13f, 0.0f);
+	Ball_Verts[16] = Vector3f(0.13f, 0.26f, 0.0f);
 
 	glGenBuffers(1, &VBO3);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO3);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices3), Vertices3, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Ball_Verts), Ball_Verts, GL_STATIC_DRAW);
 }
 
 static void CreateIndexBuffer()
 {
-	/*//List of Indices to draw
-	unsigned int Indices[] = {
-		0, 3, 1,
-		1, 3, 2,
-		2, 3, 0,
-		0, 1, 2
-	};*/
+	// Right Paddle
 	//List of Indices to draw
 	unsigned int Indices[] = {
 		0, 1, 2,
 		2, 1, 3,
-		2, 2, 2,
-		2, 2, 2
 	};
 	//Generate Index Buffer
 	glGenBuffers(1, &IBO);
@@ -298,12 +273,11 @@ static void CreateIndexBuffer()
 	//Send Indices to GL Element Array
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
 
+	// Left Paddle
 	//List of Indices to draw
 	unsigned int Indices2[] = {
 		0, 1, 2,
 		2, 1, 3,
-		2, 2, 2,
-		2, 2, 2
 	};
 	//Generate Index Buffer
 	glGenBuffers(1, &IBO2);
@@ -312,6 +286,7 @@ static void CreateIndexBuffer()
 	//Send Indices to GL Element Array
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices2), Indices2, GL_STATIC_DRAW);
 
+	// Ball
 	//List of Indices to draw
 	unsigned int Indices3[] = {
 		0, 1, 2, 13,
